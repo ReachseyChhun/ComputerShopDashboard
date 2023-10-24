@@ -1,25 +1,68 @@
+"use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
-const ProductList = ({ products }) => {
+const ProductList = () => {
+  const [products, setProducts] = useState([]);
+  const [page, setPage] = useState(0); // Current page
+  const [pageSize] = useState(8); // Number of items per page
+  const [minPrice, setMinPrice] = useState(0.0);
+  const [maxPrice, setMaxPrice] = useState(99999999999.0);
+
+  useEffect(() => {
+    // Make an HTTP GET request to fetch product data from the API with pagination and price filtering
+    fetch(
+      `http://localhost:8080/api/v1/products/filterByPrice?minPrice=${minPrice}&maxPrice=${maxPrice}&page=${page}&size=${pageSize}`
+    )
+      .then((response) => response.json())
+      .then((data) => setProducts(data))
+      .catch((error) => console.error("Error fetching data: " + error));
+  }, [page, minPrice, maxPrice, products]);
+
+  const handleDeleteProduct = (id) => {
+    // Send a DELETE request to delete the product
+    fetch(`http://localhost:8080/api/v1/products/${id}`, {
+      method: "DELETE",
+    })
+      .then((response) => {
+        if (response.status === 200) {
+          // If the delete request was successful, remove the product from the list
+          setProducts((prevProducts) =>
+            prevProducts.filter((product) => product.id !== id)
+          );
+        }
+      })
+      .catch((error) => console.error("Error deleting product: " + error));
+  };
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+  };
+
   return (
     <>
       <div className="p-4 sm:ml-64">
+      {/* <div>
+        <input
+          type="number"
+          placeholder="Min Price"
+          value={minPrice}
+          onChange={(e) => setMinPrice(e.target.value)}
+        />
+        <input
+          type="number"
+          placeholder="Max Price"
+          value={maxPrice}
+          onChange={(e) => setMaxPrice(e.target.value)}
+        />
+      </div> */}
         <div className="p-4 border-2 border-gray-200 border-solid rounded-lg dark:border-gray-700">
           <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
             <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
               <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
-                  <th scope="col" className="p-4">
-                    <div className="flex items-center">
-                      <input
-                        id="checkbox-all"
-                        type="checkbox"
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                      />
-                      <label for="checkbox-all" className="sr-only">
-                        checkbox
-                      </label>
-                    </div>
+                  <th scope="col" className="px-6 py-3">
+                    ID
                   </th>
                   <th scope="col" className="px-6 py-3">
                     Product name
@@ -40,56 +83,72 @@ const ProductList = ({ products }) => {
                     Delete
                   </th>
                 </tr>
-              </thead>
+              </thead>{" "}
               <tbody>
-                <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                  <td className="w-4 p-4">
-                    <div className="flex items-center">
-                      <input
-                        id="checkbox-table-1"
-                        type="checkbox"
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                      />
-                      <label for="checkbox-table-1" className="sr-only">
-                        checkbox
-                      </label>
-                    </div>
-                  </td>
-                  <th
-                    scope="row"
-                    className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                {products.map((product) => (
+                  // Rendering product items
+                  <tr
+                    key={product.id}
+                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover-bg-gray-600"
                   >
-                    Apple MacBook Pro 17"
-                  </th>
-                  <td className="px-6 py-4">Asus</td>
-                  <td className="px-6 py-4">Laptop</td>
-                  <td className="px-6 py-4">$2999</td>
-                  <td className="px-6 py-4">
-                    <Link
-                      href="#"
-                      className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+                    <td className="w-4 p-4">
+                      <td className="px-6 py-4">{product.id}</td>
+                    </td>
+                    <th
+                      scope="row"
+                      className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
                     >
-                      Edit
-                    </Link>
-                  </td>
-                  <td className="px-6 py-4">
-                    <Link
-                      href="#"
-                      className="font-medium text-red-600 dark:text-red-500 hover:underline"
-                    >
-                      Delete
-                    </Link>
-                  </td>
-                </tr>
+                      {product.title}
+                    </th>
+                    <td className="px-6 py-4">{product.brand}</td>
+                    <td className="px-6 py-4">{product.category}</td>
+                    <td className="px-6 py-4">{`$${product.price}`}</td>
+                    <td className="px-6 py-4">
+                      <Link
+                        href={`/edit/${product.id}`} // You should provide the correct edit route
+                        className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+                      >
+                        Edit
+                      </Link>
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        // href={`/delete/${product.id}`} // You should provide the correct delete route
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className="font-medium text-red-600 dark:text-red-500 hover:underline"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         </div>
+        <div className="mt-4 flex justify-center">
+          <button
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page === 0}
+            type="button"
+            className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2"
+          >
+            Previous
+          </button>
+
+          <span className="mx-2">{page + 1}</span>
+          <button
+            onClick={() => handlePageChange(page + 1)}
+            disabled={products.length < pageSize}
+            type="button"
+            className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </>
   );
-}
-
+};
 
 export default ProductList;
-
