@@ -18,6 +18,8 @@ export default function CreateProduct() {
     tag: [],
   };
   const [formData, setFormData] = useState(initialValues);
+  const [image, setImage] = useState(null);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,7 +38,7 @@ export default function CreateProduct() {
         console.log("Product created successfully");
         toast.success("Product created successfully");
         setFormData(initialValues);
-        console.log(formData)
+        console.log(formData);
       } else {
         // Handle error response, e.g., show an error message.
         console.error("Failed to create product");
@@ -66,6 +68,37 @@ export default function CreateProduct() {
     }
   };
 
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+  
+    // Check if a file was selected
+    if (file) {
+      const data = new FormData();
+      data.append("file", file); // Use the 'file' variable instead of 'image'
+      data.append("upload_preset", "afwvbunc");
+      data.append("cloud_name", "dliuda5ni");
+      data.append("folder", "Cloudinary-React");
+  
+      try {
+        // Upload the file to Cloudinary
+        const response = await fetch(
+          `https://api.cloudinary.com/v1_1/dliuda5ni/image/upload`,
+          {
+            method: "POST",
+            body: data,
+          }
+        );
+        const res = await response.json();
+        const imageUrl = res.secure_url;
+        setFormData({ ...formData, thumbnail: imageUrl });
+        console.log("Image uploaded successfully:", imageUrl);
+  
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    }
+  };
+  
   return (
     <>
       <section class="bg-white dark:bg-gray-900">
@@ -166,7 +199,21 @@ export default function CreateProduct() {
                   <option value="PH">Phones</option>
                 </select>
               </div>
-
+              <div class="w-full">
+                <label
+                  for="thumbnail"
+                  class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                >
+                  Thumbnail
+                </label>
+                <input
+                  type="file"
+                  id="thumbnail"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                />
+              </div>
               <div class="sm:col-span-2">
                 <label
                   for="description"
@@ -177,7 +224,7 @@ export default function CreateProduct() {
                 <textarea
                   name="description"
                   id="description"
-                  onChange={handleChange} 
+                  onChange={handleChange}
                   value={formData.description}
                   rows="8"
                   class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
@@ -194,7 +241,7 @@ export default function CreateProduct() {
           </form>
         </div>
       </section>
-      <ToastContainer autoClose={3000}/>
+      <ToastContainer autoClose={3000} />
     </>
   );
 }

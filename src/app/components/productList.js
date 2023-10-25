@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import EditModal from "../components/EditProductModal";
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
@@ -8,6 +9,8 @@ const ProductList = () => {
   const [pageSize] = useState(8); // Number of items per page
   const [minPrice, setMinPrice] = useState(0.0);
   const [maxPrice, setMaxPrice] = useState(99999999999.0);
+  const [editProduct, setEditProduct] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     // Make an HTTP GET request to fetch product data from the API with pagination and price filtering
@@ -18,6 +21,25 @@ const ProductList = () => {
       .then((data) => setProducts(data))
       .catch((error) => console.error("Error fetching data: " + error));
   }, [page, minPrice, maxPrice, products]);
+
+  const handleEditClick = (product) => {
+    setEditProduct(product);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditModalClose = () => {
+    setIsEditModalOpen(false);
+  };
+
+  const handleSaveEdit = (updatedProduct) => {
+    // Update the product in the list
+    setProducts((prevProducts) =>
+      prevProducts.map((product) =>
+        product.id === updatedProduct.id ? updatedProduct : product
+      )
+    );
+    setIsEditModalOpen(false);
+  };
 
   const handleDeleteProduct = (id) => {
     // Send a DELETE request to delete the product
@@ -42,6 +64,13 @@ const ProductList = () => {
   return (
     <>
       <div className="p-4 sm:ml-64">
+      {isEditModalOpen && (
+        <EditModal
+          product={editProduct}
+          onSave={handleSaveEdit}
+          onCancel={handleEditModalClose}
+        />
+      )}
       {/* <div>
         <input
           type="number"
@@ -104,12 +133,12 @@ const ProductList = () => {
                     <td className="px-6 py-4">{product.category}</td>
                     <td className="px-6 py-4">{`$${product.price}`}</td>
                     <td className="px-6 py-4">
-                      <Link
-                        href={`/edit/${product.id}`} // You should provide the correct edit route
+                      <button
                         className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+                        onClick={() => handleEditClick(product)}
                       >
                         Edit
-                      </Link>
+                      </button>
                     </td>
                     <td className="px-6 py-4">
                       <button
