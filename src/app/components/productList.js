@@ -6,7 +6,7 @@ import EditModal from "../components/EditProductModal";
 const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(0); // Current page
-  const [pageSize] = useState(8); // Number of items per page
+  const [pageSize] = useState(2); // Number of items per page
   const [minPrice, setMinPrice] = useState(0.0);
   const [maxPrice, setMaxPrice] = useState(99999999999.0);
   const [editProduct, setEditProduct] = useState(null);
@@ -15,10 +15,10 @@ const ProductList = () => {
   useEffect(() => {
     // Make an HTTP GET request to fetch product data from the API with pagination and price filtering
     fetch(
-      `http://localhost:8080/api/v1/products/filterByPrice?minPrice=${minPrice}&maxPrice=${maxPrice}&page=${page}&size=${pageSize}`
+      `http://localhost:8080/api/v1/products?page=${page}&size=${pageSize}&sortDirection=desc`
     )
       .then((response) => response.json())
-      .then((data) => setProducts(data))
+      .then((data) => setProducts(data.content))
       .catch((error) => console.error("Error fetching data: " + error));
   }, [page, minPrice, maxPrice, products]);
 
@@ -64,14 +64,14 @@ const ProductList = () => {
   return (
     <>
       <div className="p-4 sm:ml-64">
-      {isEditModalOpen && (
-        <EditModal
-          product={editProduct}
-          onSave={handleSaveEdit}
-          onCancel={handleEditModalClose}
-        />
-      )}
-      {/* <div>
+        {isEditModalOpen && (
+          <EditModal
+            product={editProduct}
+            onSave={handleSaveEdit}
+            onCancel={handleEditModalClose}
+          />
+        )}
+        {/* <div>
         <input
           type="number"
           placeholder="Min Price"
@@ -112,13 +112,13 @@ const ProductList = () => {
                     Delete
                   </th>
                 </tr>
-              </thead>{" "}
+              </thead>
               <tbody>
                 {products.map((product) => (
                   // Rendering product items
                   <tr
                     key={product.id}
-                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover-bg-gray-600"
+                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-600 dark:hover-bg-gray-600"
                   >
                     <td className="w-4 p-4">
                       <td className="px-6 py-4">{product.id}</td>
